@@ -1,164 +1,309 @@
-# Autonomous Data Analysis Agent
+# 📊 Autonomous Data Analysis Agent
 
-An **Autonomous Data Analyst Agent** is an Agentic AI application that automatically analyzes structured datasets such as CSV and Excel files, performs statistical analysis, generates visualizations, identifies patterns and trends, and provides insights in natural language.
+An **Autonomous Data Analysis Agent** that allows users to upload a dataset and ask questions about the data using natural language. The system automatically performs **data loading, data cleaning, profiling, analysis planning, statistical analysis, and result generation**.
 
-The main goal of this project is to reduce the amount of manual work required during data analysis. Instead of manually inspecting columns, calculating statistics, creating charts, and interpreting results, the AI agent can coordinate these tasks automatically.
+The project combines **Agentic AI, Google Gemini, Python, Pandas, and Streamlit** to create an interactive data-analysis system that can determine the appropriate analysis operation based on the user's query.
 
 ---
 
-## 1. Project Overview
+## 🚀 Project Overview
 
-Traditional data analysis usually requires a user to:
+Traditional data analysis often requires users to manually inspect datasets, clean missing or duplicate records, write analysis code, and interpret the results.
 
-1. Load the dataset.
-2. Understand the columns and data types.
-3. Check for missing values.
-4. Clean the data.
-5. Calculate statistics.
-6. Create visualizations.
-7. Identify trends and patterns.
-8. Interpret the results.
-9. Prepare a final report.
+The **Autonomous Data Analysis Agent** automates this workflow.
 
-The **Autonomous Data Analyst Agent** automates much of this workflow.
+The user only needs to:
 
-The user uploads a dataset, and the agent determines what analysis is useful, uses appropriate data-analysis tools, and presents the results in an understandable form.
+1. Upload a dataset.
+2. Ask a question in natural language.
+3. The agent analyzes the dataset.
+4. The system automatically determines the required analysis operation.
+5. The requested operation is executed on the cleaned dataset.
+6. The result and a natural-language insight are returned in **JSON format**.
 
 ### Example
 
-A user uploads:
+**User Query:**
 
-```text
-sales_data.csv
-```
+> What is the average discounted price?
 
-The system can analyze:
-
-* Number of records
-* Number of columns
-* Data types
-* Missing values
-* Duplicate records
-* Descriptive statistics
-* Maximum and minimum values
-* Average values
-* Category-wise performance
-* Trends
-* Correlations
-* Charts and graphs
-
-The AI can then generate an explanation such as:
-
-```text
-The Electronics category generated the highest revenue.
-Sales increased during the final quarter of the year.
-The dataset contains a small number of missing values
-in the customer-age column.
-```
+The agent can determine that the query requires an **average operation** on the `discounted_price` column and execute the analysis automatically.
 
 ---
 
-# 2. Project Theory
+# 🎯 Problem Statement
 
-## What is Agentic AI?
+Analyzing large datasets manually requires knowledge of programming, statistics, data cleaning, and visualization tools.
 
-Agentic AI refers to AI systems that can perform a sequence of actions to achieve a goal rather than simply generating a single response.
+The objective of this project is to develop an **AI-powered autonomous data analysis system** that can:
 
-A traditional chatbot generally follows:
+* Accept structured datasets from users.
+* Automatically inspect the uploaded data.
+* Clean and preprocess the dataset.
+* Understand natural-language analytical questions.
+* Decide which analysis operation is required.
+* Execute the analysis using Python/Pandas.
+* Generate meaningful insights.
+* Return the final result in a structured JSON format.
 
-```text
-User → LLM → Response
-```
+The system is designed to reduce the amount of manual coding required for basic exploratory data analysis.
 
-An agentic system can follow:
+---
+
+# 🧠 Agentic AI Approach
+
+The project follows an **Agentic AI architecture**.
+
+Instead of directly mapping every user question to a fixed function, the system uses an AI model to understand the user's request and generate an **analysis plan**.
+
+### Agent Workflow
 
 ```text
 User
   ↓
-AI Agent
+Upload Dataset
   ↓
-Understand the task
+Data Loading
   ↓
-Plan actions
+Data Profiling
   ↓
-Select tools
+Data Cleaning
   ↓
-Execute tools
+User Natural-Language Query
   ↓
-Analyze results
+Gemini AI
   ↓
-Generate final response
+Analysis Plan
+  ↓
+Pandas Analysis
+  ↓
+Result Generation
+  ↓
+Insight Generation
+  ↓
+JSON Response
 ```
 
-The agent can therefore interact with external tools and use their results while completing a task.
+The AI model is responsible for understanding the user's intent, while deterministic Python/Pandas operations are used to perform the actual numerical calculations.
+
+This separation helps prevent the language model from directly inventing numerical results.
 
 ---
 
-# 3. Why an AI Data Analyst Agent?
+# 📂 Dataset
 
-Large Language Models are good at understanding and explaining information, but they should not be relied upon for performing every numerical calculation themselves.
+The project currently uses the **Amazon Sales Dataset (`amazon.csv`)**, obtained from Kaggle.
 
-Therefore, this project combines:
+### Dataset Source
 
-```text
-LLM
-+
-Agent Framework
-+
-Data Analysis Libraries
-+
-Visualization Libraries
-```
+**Kaggle:**
+https://www.kaggle.com/datasets/karkavelrajaj/amazon-sales-dataset
 
-The **Python tools perform calculations**, while the **LLM interprets and explains the results**.
+The dataset contains information about products listed on Amazon, including product details, categories, prices, discounts, ratings, and customer rating counts.
+
+The original dataset contains approximately **1,465 product records and 16 attributes**.
+
+For this project, the following attributes are particularly relevant:
+
+| Attribute             | Description                                            |
+| --------------------- | ------------------------------------------------------ |
+| `product_id`          | Unique identifier of the product                       |
+| `product_name`        | Name of the product                                    |
+| `category`            | Product category and sub-category                      |
+| `discounted_price`    | Price after applying the discount                      |
+| `actual_price`        | Original/listed price                                  |
+| `discount_percentage` | Percentage discount offered                            |
+| `rating`              | Average customer rating                                |
+| `rating_count`        | Number of customer ratings/reviews                     |
+| `about_product`       | Description of the product                             |
+| `user_id`             | Identifier associated with users who submitted reviews |
+
+---
+
+# ⚠️ Important Dataset Limitation
+
+Although the dataset is commonly referred to as an **Amazon Sales Dataset**, it does **not contain actual transactional sales information**.
+
+The dataset does not provide fields such as:
+
+* Units sold
+* Quantity sold
+* Order volume
+* Revenue
+* Sales amount
+* Transaction history
+
+Therefore, the system **cannot determine the actual best-selling product**.
+
+The `rating_count` field represents the number of customer ratings/reviews. It can be used as a **popularity or customer-engagement proxy**, but it must **not be interpreted as the number of products sold**.
 
 For example:
 
 ```text
-Pandas
-   ↓
-Calculate average sales
-   ↓
-Return numerical result
-   ↓
-LLM
-   ↓
-Explain what the result means
+High rating_count
+        ↓
+Higher customer engagement/popularity
+        ≠
+Higher number of products sold
 ```
 
-This makes the system more reliable than asking the LLM to calculate everything directly.
+Therefore, the project focuses on **product, pricing, discount, rating, category, popularity, and data-quality analysis** rather than actual sales-volume prediction.
 
 ---
 
-# 4. Main Objectives
+# 🔍 Scope of Analysis
 
-The main objectives of the project are:
+The agent can perform several types of analysis on the dataset.
 
-* Automate common data-analysis tasks.
-* Allow users to upload CSV and Excel datasets.
-* Automatically inspect datasets.
-* Detect missing and inconsistent data.
-* Generate statistical summaries.
-* Create useful visualizations.
-* Identify patterns and trends.
-* Provide natural-language insights.
-* Allow users to interact with their data using questions.
-* Demonstrate the practical use of Agentic AI.
+### 1. Product Analysis
+
+The system can analyze individual product characteristics such as:
+
+* Product rating
+* Product price
+* Discount
+* Rating count
+* Product popularity
+
+Example:
+
+```text
+Which products have the highest ratings?
+```
 
 ---
 
-# 5. Key Features
+### 2. Price Analysis
 
-## Dataset Upload
+The agent can analyze:
 
-Users can upload datasets such as:
+* Average discounted price
+* Minimum price
+* Maximum price
+* Price distributions
+* Price comparisons
 
-* CSV
-* Excel (`.xlsx`)
+Example:
 
-## Automatic Dataset Understanding
+```text
+What is the average discounted price?
+```
 
-The system can identify:
+---
+
+### 3. Discount Analysis
+
+The system can analyze:
+
+* Average discount percentage
+* Maximum discount
+* Minimum discount
+* Discounts across categories
+* Relationship between actual and discounted prices
+
+Example:
+
+```text
+Which products have the highest discount percentage?
+```
+
+---
+
+### 4. Rating Analysis
+
+The system can analyze:
+
+* Average rating
+* Highest-rated products
+* Lowest-rated products
+* Rating distributions
+
+Example:
+
+```text
+What is the average product rating?
+```
+
+---
+
+### 5. Popularity Analysis
+
+The `rating_count` attribute can be used to identify products receiving a large number of customer ratings.
+
+Example:
+
+```text
+Which products have the highest rating count?
+```
+
+This represents **customer engagement/popularity**, not actual sales.
+
+---
+
+### 6. Category Analysis
+
+The system can analyze:
+
+* Number of products per category
+* Average price by category
+* Average rating by category
+* Average discount by category
+* Category-level statistics
+
+Example:
+
+```text
+Which category has the highest average discount?
+```
+
+---
+
+### 7. Data Quality Analysis
+
+The system automatically checks for:
+
+* Missing values
+* Duplicate rows
+* Column inconsistencies
+* Data types
+* Number of unique values
+* Dataset dimensions
+
+---
+
+# 🧹 Data Cleaning
+
+Before performing analysis, the dataset passes through an automated data-cleaning stage.
+
+The cleaning module performs operations such as:
+
+### Duplicate Removal
+
+Duplicate records are identified and removed.
+
+```text
+Original Dataset
+      ↓
+Find Duplicate Rows
+      ↓
+Remove Duplicates
+      ↓
+Clean Dataset
+```
+
+### Missing Value Handling
+
+Missing numerical values can be replaced using appropriate statistical values such as the median.
+
+Categorical missing values can be handled using the mode or an `"Unknown"` value when appropriate.
+
+### Column Cleaning
+
+Column names are normalized by removing unnecessary spaces.
+
+### Data Profiling
+
+The system generates information about:
 
 * Number of rows
 * Number of columns
@@ -167,482 +312,683 @@ The system can identify:
 * Missing values
 * Duplicate records
 
-## Statistical Analysis
+---
 
-The system can calculate:
+# 🏗️ Modular Architecture
 
-* Mean
-* Median
+The project follows a modular architecture so that each component has a specific responsibility.
+
+```text
+                 ┌─────────────────────┐
+                 │        User         │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │    Streamlit UI     │
+                 │      main.py        │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │    Orchestrator     │
+                 │   orchestrator.py   │
+                 └──────────┬──────────┘
+                            │
+             ┌──────────────┼──────────────┐
+             │              │              │
+             ▼              ▼              ▼
+       ┌───────────┐  ┌────────────┐  ┌─────────────┐
+       │   Load    │  │   Profile  │  │    Clean    │
+       │   Data    │  │    Data    │  │    Data     │
+       └───────────┘  └────────────┘  └─────────────┘
+             │              │              │
+             └──────────────┼──────────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │    Google Gemini    │
+                 │   Analysis Planner  │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │   Analysis Plan     │
+                 │      JSON           │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │  Pandas Analysis    │
+                 │  Deterministic Ops  │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │  Insight Generation │
+                 │    Gemini + Data    │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │    JSON Response    │
+                 └─────────────────────┘
+```
+
+---
+
+# 📦 Project Modules
+
+The project is divided into separate modules.
+
+## `main.py`
+
+`main.py` acts as the **frontend layer** of the application.
+
+Responsibilities:
+
+* Launch Streamlit application
+* Provide dataset upload interface
+* Accept CSV, Excel and JSON files
+* Accept natural-language questions
+* Display analysis results
+* Display JSON output
+* Provide JSON download functionality
+
+---
+
+## `orchestrator.py`
+
+`orchestrator.py` is the **core agent/controller module**.
+
+It coordinates the complete workflow.
+
+Responsibilities:
+
+* Load the dataset
+* Profile the dataset
+* Trigger data cleaning
+* Understand the user's query
+* Communicate with Gemini
+* Generate an analysis plan
+* Execute the required analysis
+* Generate insights
+* Construct the final JSON response
+
+The orchestrator acts as the central decision-making component of the application.
+
+---
+
+## `helper.py`
+
+`helper.py` contains reusable data-processing functions.
+
+Responsibilities include:
+
+* Dataset loading
+* Data profiling
+* Data cleaning
+* Statistical calculations
+* Column information extraction
+
+This keeps the data-processing logic separate from the application and orchestration logic.
+
+---
+
+# 🤖 Google Gemini Integration
+
+Google Gemini is used as the natural-language reasoning component of the system.
+
+The model helps transform a user's natural-language question into a structured analysis plan.
+
+### Example
+
+User asks:
+
+```text
+What is the average rating?
+```
+
+Gemini generates an analysis plan similar to:
+
+```json
+{
+    "operation": "average",
+    "column": "rating"
+}
+```
+
+The Python application then executes the operation using Pandas.
+
+```text
+Natural Language
+       ↓
+Gemini
+       ↓
+Structured Analysis Plan
+       ↓
+Pandas
+       ↓
+Numerical Result
+```
+
+This approach allows the AI model to interpret the query while Python performs the actual calculation.
+
+---
+
+# 🐼 Pandas Analysis Engine
+
+Pandas is used as the primary data-processing and analysis library.
+
+Depending on the generated analysis plan, the system can perform operations such as:
+
+* Average
+* Sum
 * Minimum
 * Maximum
-* Standard deviation
 * Count
-* Correlation
+* Descriptive statistics
+* Category-based analysis
+* Column-level analysis
 
-## Data Visualization
+Example:
 
-The application can generate charts such as:
-
-* Bar charts
-* Line charts
-* Histograms
-* Scatter plots
-* Correlation plots
-
-## AI-generated Insights
-
-The LLM interprets the analysis results and explains:
-
-* Important trends
-* Unusual values
-* Relationships between variables
-* Significant observations
-
-## Conversational Data Analysis
-
-Users can ask questions such as:
-
-```text
-Which product generated the highest sales?
-
-What is the average revenue?
-
-Which month had the highest sales?
-
-Are there any missing values?
-
-Show me the relationship between sales and profit.
+```python
+df["rating"].mean()
 ```
 
-The agent determines what analysis is required and uses the appropriate tool.
+The result is then passed to the output-generation stage.
 
 ---
 
-# 6. System Architecture
+# 📤 JSON Output
+
+The final result of the agent is returned in structured JSON format.
+
+Example:
+
+```json
+{
+    "status": "success",
+    "question": "What is the average rating?",
+    "analysis": {
+        "operation": "average",
+        "column": "rating",
+        "result": 4.09
+    },
+    "insight": "The dataset has an average product rating of approximately 4.09."
+}
+```
+
+A structured JSON response makes the system easier to integrate with:
+
+* Web applications
+* APIs
+* Dashboards
+* Other AI agents
+* Data-processing systems
+
+---
+
+# 🔄 Complete System Workflow
+
+The complete execution process is:
 
 ```text
-                 USER
-                   |
-                   ↓
-          +----------------+
-          |   Streamlit    |
-          |   Frontend     |
-          +-------+--------+
-                  |
-                  ↓
-          +----------------+
-          |    FastAPI     |
-          |    Backend     |
-          +-------+--------+
-                  |
-                  ↓
-          +----------------+
-          |  AI Analyst    |
-          |     Agent      |
-          +-------+--------+
-                  |
-                  ↓
-             LangGraph
-                  |
-       +----------+----------+
-       |          |          |
-       ↓          ↓          ↓
-    Pandas     NumPy     Visualization
-       |          |          |
-       +----------+----------+
-                  |
-                  ↓
-                LLM
-                  |
-                  ↓
-          AI-generated Report
+1. User uploads dataset
+          ↓
+2. Dataset is saved
+          ↓
+3. Dataset is loaded
+          ↓
+4. Dataset is profiled
+          ↓
+5. Data cleaning is performed
+          ↓
+6. User enters natural-language query
+          ↓
+7. Query is sent to Gemini
+          ↓
+8. Gemini generates analysis plan
+          ↓
+9. Analysis plan is validated
+          ↓
+10. Pandas performs analysis
+          ↓
+11. Gemini generates an insight
+          ↓
+12. Final response is converted to JSON
+          ↓
+13. JSON displayed to user
 ```
 
 ---
 
-# 7. Technology Stack
+# 📁 Project Structure
 
-| Technology    | Purpose                         |
-| ------------- | ------------------------------- |
-| Python        | Main programming language       |
-| LangGraph     | Agent workflow                  |
-| LangChain     | LLM and tool integration        |
-| OpenAI API    | Large Language Model            |
-| Pandas        | Data manipulation and analysis  |
-| NumPy         | Numerical operations            |
-| Matplotlib    | Data visualization              |
-| Seaborn       | Statistical visualization       |
-| OpenPyXL      | Excel file processing           |
-| Streamlit     | User interface                  |
-| FastAPI       | Backend API                     |
-| Uvicorn       | FastAPI server                  |
-| python-dotenv | Environment variable management |
-| Git           | Version control                 |
-| GitHub        | Code repository                 |
+```text
+Autonomous_Data_Analysis_Agent/
+│
+├── main.py
+├── orchestrator.py
+├── helper.py
+├── requirements.txt
+├── .env
+├── .gitignore
+│
+├── data/
+│   └── uploads/
+│
+└── README.md
+```
+
+### File Description
+
+| File/Folder        | Purpose                                                   |
+| ------------------ | --------------------------------------------------------- |
+| `main.py`          | Streamlit user interface                                  |
+| `orchestrator.py`  | Agent orchestration and workflow                          |
+| `helper.py`        | Data loading, cleaning and analysis utilities             |
+| `requirements.txt` | Python dependencies                                       |
+| `.env`             | API key configuration                                     |
+| `.gitignore`       | Prevents sensitive/unnecessary files from being committed |
+| `data/uploads/`    | Stores uploaded datasets                                  |
+| `README.md`        | Project documentation                                     |
 
 ---
 
-# 8. Prerequisites
+# 🛠️ Technologies Used
 
-Before installing the project, make sure you have:
+### Programming Language
 
-### Required
+* **Python**
 
-* Python 3.10 or higher
-* VS Code
+### AI Model
+
+* **Google Gemini**
+
+### Data Processing
+
+* **Pandas**
+* **NumPy**
+
+### Frontend
+
+* **Streamlit**
+
+### Environment Management
+
+* **Python Virtual Environment (`venv`)**
+* **python-dotenv**
+
+### File Formats
+
+* CSV
+* Excel
+* JSON
+
+---
+
+# 📋 Prerequisites
+
+Before running the project, install:
+
+* Python 3.x
+* pip
 * Git
-* Internet connection
-* LLM API key
-* Basic knowledge of Python
-
-### Recommended
-
-* Python 3.11+
-* 8 GB RAM or more
-* GitHub account
-
-### Hardware
-
-A dedicated GPU is **not required** when using a cloud-based LLM API.
+* VS Code or another Python IDE
+* Google Gemini API key
 
 ---
 
-# 9. Installation
+# ⚙️ Installation
 
-## Step 1 — Clone the Repository
+Clone the repository:
 
 ```bash
-git clone <your-github-repository-url>
-cd autonomous-data-analyst
+git clone <YOUR_GITHUB_REPOSITORY_URL>
 ```
 
----
+Navigate to the project directory:
 
-## Step 2 — Create a Virtual Environment
+```bash
+cd Autonomous_Data_Analysis_Agent
+```
+
+Create a virtual environment:
 
 ```bash
 python -m venv venv
 ```
 
----
-
-## Step 3 — Activate the Virtual Environment
-
-### Windows CMD
-
-```bash
-venv\Scripts\activate
-```
-
-### Windows PowerShell
+Activate the virtual environment on Windows PowerShell:
 
 ```powershell
-venv\Scripts\Activate.ps1
-```
-
-After activation, the terminal should show:
-
-```text
-(venv)
+.\venv\Scripts\Activate.ps1
 ```
 
 ---
 
-## Step 4 — Install Dependencies
+# 📦 Install Dependencies
+
+Install the required Python packages:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-If `requirements.txt` does not exist yet:
+If the requirements file is not available, install the main dependencies:
 
 ```bash
-pip install pandas numpy matplotlib seaborn openpyxl langgraph langchain langchain-core langchain-openai streamlit fastapi uvicorn python-dotenv
-```
-
-Then create the requirements file:
-
-```bash
-pip freeze > requirements.txt
+pip install streamlit pandas numpy openpyxl python-dotenv google-genai
 ```
 
 ---
 
-# 10. Environment Variables
+# 🔑 Gemini API Configuration
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root directory:
 
-```env
-OPENAI_API_KEY=your_api_key_here
+```text
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-Do not share your API key publicly.
+The `.env` file should be located here:
 
-Add `.env` to `.gitignore`:
+```text
+Autonomous_Data_Analysis_Agent/
+│
+├── .env
+├── main.py
+├── orchestrator.py
+└── helper.py
+```
+
+### Important
+
+Do not upload your API key to GitHub.
+
+Add the following to `.gitignore`:
 
 ```text
 .env
 venv/
 __pycache__/
+*.pyc
+data/uploads/
 ```
 
 ---
 
-# 11. Project Structure
+# ▶️ Running the Application
 
-```text
-autonomous-data-analyst/
-│
-├── venv/
-│
-├── app/
-│   ├── main.py
-│   ├── agent.py
-│   ├── analysis.py
-│   ├── visualization.py
-│   └── prompts.py
-│
-├── data/
-│   └── sample.csv
-│
-├── .env
-├── .gitignore
-├── requirements.txt
-└── README.md
+Do not run the Streamlit application using:
+
+```bash
+python main.py
 ```
 
-### File responsibilities
+Instead, start it using:
 
-### `main.py`
+```bash
+streamlit run main.py
+```
 
-Runs the application and provides the user interface.
+Streamlit will provide a local URL, usually similar to:
 
-### `agent.py`
+```text
+http://localhost:8501
+```
 
-Contains the Agentic AI workflow and decision-making logic.
-
-### `analysis.py`
-
-Contains Pandas and NumPy-based analysis functions.
-
-### `visualization.py`
-
-Contains functions for generating charts.
-
-### `prompts.py`
-
-Contains prompts and instructions used by the LLM.
-
-### `data/`
-
-Stores sample or temporary datasets.
+Open the URL in your browser.
 
 ---
 
-# 12. How the Agent Works
+# 📊 Using the Application
 
-The basic workflow is:
+### Step 1 — Upload Dataset
 
-```text
-1. User uploads dataset
-          ↓
-2. Agent reads dataset
-          ↓
-3. Agent understands the dataset
-          ↓
-4. Agent determines required analysis
-          ↓
-5. Agent selects appropriate tools
-          ↓
-6. Pandas/NumPy perform calculations
-          ↓
-7. Visualization tools create charts
-          ↓
-8. Results are provided to the LLM
-          ↓
-9. LLM interprets the results
-          ↓
-10. Final insights are displayed
-```
-
----
-
-# 13. Example Agent Tools
-
-The agent can have tools such as:
+Upload a supported dataset:
 
 ```text
-analyze_dataset()
-calculate_statistics()
-find_missing_values()
-find_duplicates()
-calculate_correlation()
-generate_chart()
-filter_data()
+.csv
+.xlsx
+.xls
+.json
 ```
 
-The agent decides which tools are useful based on the user's request.
+### Step 2 — Enter a Question
 
 For example:
 
 ```text
-User:
-"Which category has the highest sales?"
+What is the average rating?
+```
 
-        ↓
+or:
 
-Agent:
-Need category-wise sales analysis.
+```text
+Which product has the highest discount?
+```
 
-        ↓
+or:
 
-Pandas:
-Group data by category.
+```text
+What is the maximum discounted price?
+```
 
-        ↓
+### Step 3 — Analyze
 
-Calculation:
-Find category with maximum sales.
+Click:
 
-        ↓
+```text
+Analyze Data
+```
 
-LLM:
-Explain the result.
+### Step 4 — View Result
 
-        ↓
+The agent displays the analysis result and generated insight in JSON format.
 
-User:
-Receives the answer.
+---
+
+# 💬 Example Queries
+
+The system can handle questions such as:
+
+```text
+What is the average rating?
+```
+
+```text
+What is the average discounted price?
+```
+
+```text
+What is the maximum discount percentage?
+```
+
+```text
+Which product has the highest rating?
+```
+
+```text
+Which product has the highest rating count?
+```
+
+```text
+How many products are present in the dataset?
+```
+
+```text
+What are the basic statistics of the dataset?
+```
+
+```text
+Which category contains the most products?
+```
+
+```text
+What is the minimum actual price?
+```
+
+```text
+What is the maximum discounted price?
 ```
 
 ---
 
-# 14. Running the Application
+# 🧩 Modular Design
 
-Activate the virtual environment:
+The project uses a modular architecture instead of placing all functionality inside a single Python file.
 
-```bash
-venv\Scripts\activate
+### Layer 1 — Presentation Layer
+
+```text
+main.py
 ```
 
-Run Streamlit:
+Responsible for user interaction.
 
-```bash
-streamlit run app/main.py
+### Layer 2 — Agent/Orchestration Layer
+
+```text
+orchestrator.py
 ```
 
-The application will open in the browser.
+Responsible for coordinating the AI-driven workflow.
+
+### Layer 3 — Data Processing Layer
+
+```text
+helper.py
+```
+
+Responsible for loading, cleaning and profiling data.
+
+### Layer 4 — AI Reasoning Layer
+
+```text
+Google Gemini
+```
+
+Responsible for understanding natural-language questions and generating analysis plans/insights.
+
+### Layer 5 — Computation Layer
+
+```text
+Pandas
+```
+
+Responsible for deterministic data calculations.
+
+### Layer 6 — Output Layer
+
+```text
+JSON
+```
+
+Responsible for providing structured results.
 
 ---
 
-# 15. Example Use Cases
+# 🔐 Security Considerations
 
-The system can be used for datasets involving:
+The project uses an API key to communicate with Google Gemini.
 
-* Sales
-* Customers
-* Students
-* Finance
-* Marketing
-* Inventory
-* Employees
-* Products
-* Business operations
+The API key should:
 
----
+* Be stored in `.env`
+* Never be hard-coded into Python files
+* Never be committed to GitHub
+* Never be included in screenshots or public documentation
 
-# 16. Advantages
-
-* Reduces repetitive manual analysis.
-* Allows non-technical users to interact with datasets.
-* Automates multiple analysis steps.
-* Combines traditional data-analysis libraries with AI.
-* Provides natural-language explanations.
-* Can be extended with additional tools.
-* Demonstrates practical Agentic AI concepts.
+The `.env` file should always be included in `.gitignore`.
 
 ---
 
-# 17. Limitations
+# ⚡ Key Features
 
-* Results depend on the quality of the uploaded dataset.
-* LLM-generated explanations may occasionally be incorrect.
-* API-based LLMs require internet access.
-* Large datasets may require additional processing strategies.
-* API usage may incur costs.
-* Numerical calculations should be performed by Python tools rather than relying solely on the LLM.
-
----
-
-# 18. Future Enhancements
-
-Possible future improvements include:
-
-* PDF report generation
-* Multiple-file analysis
-* Database connectivity
-* SQL query generation
-* Predictive analytics
-* Machine learning integration
-* Automated data cleaning
-* Advanced anomaly detection
-* Interactive Plotly dashboards
-* Voice-based data analysis
-* Multi-agent data-analysis workflow
+* 🤖 Agentic AI-based analysis
+* 📂 CSV, Excel and JSON support
+* 🧹 Automated data cleaning
+* 🔍 Automatic data profiling
+* 💬 Natural-language queries
+* 🧠 Gemini-powered analysis planning
+* 🐼 Pandas-based deterministic calculations
+* 📊 Product and category analysis
+* 💰 Price and discount analysis
+* ⭐ Rating analysis
+* 📈 Popularity/engagement analysis
+* 📋 Structured JSON output
+* 🌐 Streamlit web interface
+* 📥 JSON result download
 
 ---
 
-# 19. Development Roadmap
+# 🔮 Future Enhancements
 
-### Phase 1 — Environment Setup
+The project can be extended with additional capabilities such as:
 
-* Install Python
-* Create virtual environment
-* Install dependencies
-* Configure API key
-
-### Phase 2 — Data Analysis
-
-* CSV upload
-* Excel upload
-* Dataset inspection
-* Missing-value detection
-* Statistical analysis
-
-### Phase 3 — Visualization
-
-* Generate charts
-* Add filtering
-* Improve dashboard
-
-### Phase 4 — Agentic AI
-
-* Create LangGraph workflow
-* Add analysis tools
-* Connect LLM
-* Implement tool selection
-* Generate AI insights
-
-### Phase 5 — Testing
-
-* Test different datasets
-* Test different questions
-* Handle invalid files
-* Handle missing data
-* Improve error handling
-
-### Phase 6 — Deployment
-
-* Deploy frontend/application
-* Configure environment variables
-* Test production version
+* Interactive data visualizations
+* Automatic chart generation
+* More advanced statistical analysis
+* Correlation analysis
+* Outlier detection
+* Trend analysis
+* Regression analysis
+* Natural-language data visualization
+* SQL database support
+* Multiple datasets
+* RAG-based dataset documentation
+* Automated report generation
+* Multi-agent architecture
+* Conversation memory
+* Voice-based data queries
+* Deployment using cloud platforms
+* Support for larger datasets
 
 ---
 
-# 20. Conclusion
+# 📌 Current Limitations
 
-The **Autonomous Data Analyst Agent** combines traditional data-analysis techniques with Agentic AI.
+1. The current Amazon dataset does not contain actual sales volume or units-sold information.
+2. `rating_count` is treated as a popularity/engagement indicator rather than sales.
+3. The current analysis operations are primarily statistical and tabular.
+4. The system depends on the availability of the Gemini API for AI-based query interpretation.
+5. Very large datasets may require additional optimization.
+6. Data-cleaning decisions are currently based on predefined preprocessing rules.
 
-Instead of simply providing an AI chatbot, the system gives the AI agent access to real data-analysis tools. The agent can determine what actions are required, execute those actions, interpret the results, and communicate the findings to the user.
+---
 
-The project demonstrates how **LLMs, agents, tools, data processing, and visualization** can work together to automate a real-world data-analysis workflow.
+# 📚 Dataset Reference
+
+**Karkavelraja J. — Amazon Sales Dataset**
+
+Kaggle:
+
+https://www.kaggle.com/datasets/karkavelrajaj/amazon-sales-dataset
+
+---
+
+# 👨‍💻 Project
+
+**Project Name:** Autonomous Data Analysis Agent
+
+**Domain:** Agentic AI / Data Analytics / Generative AI
+
+**Frontend:** Streamlit
+
+**Programming Language:** Python
+
+**AI Model:** Google Gemini
+
+**Data Processing:** Pandas & NumPy
+
+**Output Format:** JSON
+
+---
+
+# ⭐ Conclusion
+
+The **Autonomous Data Analysis Agent** provides an AI-assisted approach to exploratory data analysis. By combining **Google Gemini for natural-language understanding and analysis planning** with **Pandas for deterministic data processing**, the system allows users to interact with structured datasets using ordinary questions rather than manually writing analysis code.
+
+The modular architecture makes the system easier to maintain, extend, and integrate with additional datasets, analytical operations, AI models, and interfaces in the future.
