@@ -3,6 +3,7 @@ import os
 import json
 import pandas as pd
 
+from helper import load_data, generate_recommended_questions
 from orchestrator import run_agent
 
 
@@ -62,26 +63,44 @@ if uploaded_file is not None:
 
     st.success(f"File uploaded: `{uploaded_file.name}`")
 
+    # Load dataset sample for dynamic question recommendations
+    try:
+        df_sample = load_data(file_path)
+        rec_questions = generate_recommended_questions(df_sample)
+    except Exception:
+        rec_questions = [
+            "What is the average discounted_price?",
+            "Which categories have the highest average rating?",
+            "Find the top 10 products based on rating count"
+        ]
+
+    # Initialize session state for user question if not set
+    if "selected_question" not in st.session_state:
+        st.session_state["selected_question"] = ""
+
     # --------------------------------------------------
-    # USER QUESTION & SAMPLE SUGGESTIONS
+    # RECOMMENDED QUESTIONS BUTTONS
     # --------------------------------------------------
 
-    st.markdown("### 💡 Example Questions")
-    col1, col2, col3 = st.columns(3)
+    st.markdown("### 💡 Recommended Questions for Your Dataset")
+    st.caption("Click any recommended question below to select it as your query:")
+    
+    q_cols = st.columns(len(rec_questions))
+    for idx, q_text in enumerate(rec_questions):
+        if q_cols[idx].button(f"📌 {q_text}", key=f"rec_btn_{idx}"):
+            st.session_state["selected_question"] = q_text
+            st.rerun()
 
-    sample_q = ""
-    if col1.button("Average discounted price"):
-        sample_q = "What is the average discounted_price?"
-    if col2.button("Top rated categories"):
-        sample_q = "Which categories have the highest average rating?"
-    if col3.button("Top 10 popular products"):
-        sample_q = "Find the top 10 products based on rating count"
-
+    # Question text area bound to session state
     question = st.text_area(
         "Ask a question about your dataset",
-        value=sample_q if sample_q else "",
-        placeholder="Example: What is the average discounted_price?"
+        value=st.session_state.get("selected_question", ""),
+        placeholder="Example: What is the average discounted_price?",
+        key="question_input"
     )
+
+    # Synchronize manual edits back to session state
+    st.session_state["selected_question"] = question
 
     # --------------------------------------------------
     # ANALYZE BUTTON
@@ -90,7 +109,7 @@ if uploaded_file is not None:
     if st.button("🚀 Analyze Data", type="primary"):
 
         if not question.strip():
-            st.warning("Please enter a question.")
+            st.warning("Please enter or select a question.")
         else:
             with st.spinner("Analyzing your dataset with Autonomous Agent..."):
                 try:
@@ -124,26 +143,79 @@ if uploaded_file is not None:
 
                     analysis_res = result.get("analysis_result", {})
 
-                    # Render Tabular Data if present
+                    # Check if result contains tabular row items
+                    rows_list = None
                     if "result" in analysis_res and isinstance(analysis_res["result"], list):
-                        res_df = pd.DataFrame(analysis_res["result"])
-                        st.dataframe(res_df, use_container_width=True)
-
+                        rows_list = analysis_res["result"]
                     elif "result_sample" in analysis_res and isinstance(analysis_res["result_sample"], list):
-                        res_df = pd.DataFrame(analysis_res["result_sample"])
-                        st.dataframe(res_df, use_container_width=True)
+                        rows_list = analysis_res["result_sample"]
+
+                    if rows_list is not None:
+                        if len(rows_list) == 1:
+                            # Single row result: Render clean card format (NO unreadable giant metrics, NO table, NO chart)
+                            st.markdown("#### 🎯 Result Details")
+                            single_row = rows_list[0]
+                            
+                            # Identify primary title/name field if present
+                            title_field = None
+                            for name_candidate in ["product_name", "title", "name", "category", "item_name"]:
+                                if name_candidate in single_row and single_row[name_candidate]:
+                                    title_field = name_candidate
+                                    break
+
+                            if title_field:
+                                title_val = str(single_row[title_field])
+                                st.markdown(f"""
+                                <div style="background-color: #f8f9fa; padding: 14px 18px; border-radius: 8px; border-left: 5px solid #0d6efd; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                    <span style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; font-weight: bold;">{title_field.replace('_', ' ').title()}</span>
+                                    <div style="font-size: 17px; font-weight: 600; color: #212529; margin-top: 4px; word-wrap: break-word; line-height: 1.4;">{title_val}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
+
+                            # Separate numeric metrics and text fields
+                            num_fields = {k: v for k, v in single_row.items() if k != title_field and isinstance(v, (int, float))}
+                            text_fields = {k: v for k, v in single_row.items() if k != title_field and not isinstance(v, (int, float))}
+
+                            # Render numeric metrics in badge columns
+                            if num_fields:
+                                m_cols = st.columns(min(len(num_fields), 4))
+                                for idx, (k, v) in enumerate(num_fields.items()):
+                                    field_label = k.replace("_", " ").title()
+                                    formatted_val = f"{v:,.2f}" if isinstance(v, float) else f"{v:,}"
+                                    m_cols[idx % len(m_cols)].metric(field_label, formatted_val)
+
+                            # Render text fields in clean formatted markdown blocks
+                            if text_fields:
+                                for k, v in text_fields.items():
+                                    if v is not None and str(v).strip():
+                                        field_label = k.replace("_", " ").title()
+                                        st.markdown(f"**{field_label}:** {v}")
+
+                        elif len(rows_list) > 1:
+                            # Multiple rows: Display interactive Dataframe Table
+                            res_df = pd.DataFrame(rows_list)
+                            st.dataframe(res_df, use_container_width=True)
+
+                            # Render Chart only when there are multiple data points (> 1 row)
+                            chart_data = analysis_res.get("chart_data")
+                            if chart_data and "data" in chart_data and len(chart_data["data"]) > 1:
+                                st.subheader("📈 Visualization")
+                                chart_df = pd.DataFrame(chart_data["data"])
+                                if "x" in chart_df.columns and "y" in chart_df.columns:
+                                    chart_df = chart_df.set_index("x")
+                                    st.bar_chart(chart_df["y"], use_container_width=True)
 
                     elif "result" in analysis_res:
-                        st.write(f"**Result ({analysis_res.get('operation', 'metric')}):**", analysis_res["result"])
-
-                    # Render Chart if chart_data present
-                    chart_data = analysis_res.get("chart_data")
-                    if chart_data and "data" in chart_data and len(chart_data["data"]) > 0:
-                        st.subheader("📈 Visualization")
-                        chart_df = pd.DataFrame(chart_data["data"])
-                        if "x" in chart_df.columns and "y" in chart_df.columns:
-                            chart_df = chart_df.set_index("x")
-                            st.bar_chart(chart_df["y"], use_container_width=True)
+                        # Scalar result (e.g. average, sum, count, min, max, correlation)
+                        op_name = analysis_res.get('operation', 'metric').replace("_", " ").title()
+                        val = analysis_res['result']
+                        st.markdown("#### 🎯 Result Summary")
+                        if isinstance(val, float):
+                            st.metric(op_name, f"{val:,.2f}")
+                        elif isinstance(val, int):
+                            st.metric(op_name, f"{val:,}")
+                        else:
+                            st.write(f"**{op_name}:** {val}")
 
                     # ----------------------------------
                     # RAW JSON DETAILS & DOWNLOAD

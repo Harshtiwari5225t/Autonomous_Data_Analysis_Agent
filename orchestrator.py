@@ -16,6 +16,41 @@ from helper import (
 
 
 # --------------------------------------------------
+# CUSTOM EXCEPTIONS & CONFIGURATION
+# --------------------------------------------------
+
+class AnalysisError(Exception):
+    """Custom exception raised when data analysis operation fails."""
+    pass
+
+
+class MissingAPIKeyError(Exception):
+    """Custom exception raised when no Gemini API key is configured."""
+    pass
+
+
+DEFAULT_MODELS = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-flash-latest"]
+
+
+def get_api_key():
+    return os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or ""
+
+
+def get_models():
+    models_env = os.getenv("GEMINI_MODELS")
+    if models_env:
+        return [m.strip() for m in models_env.split(",") if m.strip()]
+    return DEFAULT_MODELS
+
+
+def get_client():
+    key = get_api_key()
+    if not key:
+        raise MissingAPIKeyError("No API key configured. Please set GOOGLE_API_KEY or GEMINI_API_KEY in .env.")
+    return genai.Client(api_key=key)
+
+
+# --------------------------------------------------
 # LOAD ENVIRONMENT & INITIALIZE CLIENT
 # --------------------------------------------------
 
@@ -23,9 +58,8 @@ load_dotenv()
 
 from google import genai
 
-api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or ""
-
-client = genai.Client(api_key=api_key)
+api_key = get_api_key()
+client = genai.Client(api_key=api_key) if api_key else None
 
 
 # --------------------------------------------------
@@ -220,6 +254,8 @@ def execute_analysis(df, plan):
         sorted_df = df.sort_values(by=column, ascending=ascending).head(n)
 
         display_cols = [c for c in ["product_name", "category", column, "discounted_price", "actual_price", "rating", "rating_count"] if c in df.columns]
+        if not any(k in display_cols for k in ["product_name", "category"]) and len(df.columns) > 0:
+            display_cols.insert(0, df.columns[0])
         if column not in display_cols:
             display_cols.append(column)
         display_cols = list(dict.fromkeys(display_cols))

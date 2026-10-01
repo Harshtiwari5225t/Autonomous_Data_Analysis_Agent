@@ -4,8 +4,9 @@ import os
 import re
 import warnings
 
-# Suppress pandas migration warnings if any
+# Suppress warnings if any
 warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 # --------------------------------------------------
@@ -35,6 +36,51 @@ def load_data(file_path):
         )
 
     return df
+
+
+# --------------------------------------------------
+# RECOMMENDED QUESTIONS GENERATOR
+# --------------------------------------------------
+
+def generate_recommended_questions(df):
+    """
+    Generate context-aware sample questions based on columns of uploaded dataset.
+    """
+    if df is None or df.empty:
+        return ["Describe the dataset statistics"]
+
+    cols = [str(c).strip() for c in df.columns]
+    
+    questions = []
+    
+    price_cols = [c for c in cols if any(k in c.lower() for k in ["price", "cost", "sales", "amount"])]
+    rating_cols = [c for c in cols if "rating" in c.lower() and "count" not in c.lower()]
+    count_cols = [c for c in cols if any(k in c.lower() for k in ["count", "quantity", "reviews", "num"])]
+    category_cols = [c for c in cols if any(k in c.lower() for k in ["category", "type", "group", "department"])]
+    discount_cols = [c for c in cols if "discount" in c.lower()]
+
+    if price_cols:
+        questions.append(f"What is the average {price_cols[0]}?")
+    elif len(cols) > 0:
+        questions.append(f"What is the average {cols[0]}?")
+
+    if category_cols and rating_cols:
+        questions.append(f"Which {category_cols[0]}s have the highest average {rating_cols[0]}?")
+    elif category_cols and price_cols:
+        questions.append(f"Which {category_cols[0]}s have the highest average {price_cols[0]}?")
+
+    if count_cols:
+        questions.append(f"Find the top 5 items based on {count_cols[0]}")
+    elif rating_cols:
+        questions.append(f"Find the top 5 items based on {rating_cols[0]}")
+
+    if discount_cols:
+        questions.append(f"Which items have {discount_cols[0]} greater than 50%")
+    
+    if len(questions) < 3:
+        questions.append("Describe the dataset statistics")
+
+    return questions[:4]
 
 
 # --------------------------------------------------
@@ -80,17 +126,17 @@ def profile_data(df):
     profile = {
         "rows": int(df.shape[0]),
         "columns": int(df.shape[1]),
-        "column_names": df.columns.tolist(),
+        "column_names": [str(c) for c in df.columns],
         "data_types": {
-            column: str(dtype)
+            str(column): str(dtype)
             for column, dtype in df.dtypes.items()
         },
         "missing_values": {
-            column: int(value)
+            str(column): int(value)
             for column, value in df.isnull().sum().items()
             if value > 0
         },
-        "duplicate_rows": int(df.duplicated().sum())
+        "duplicate_rows": int(df.duplicated().sum()) if not df.empty else 0
     }
 
     return profile
@@ -109,11 +155,12 @@ def clean_data(df):
     original_rows = len(df)
 
     # Remove duplicate rows
-    duplicates_removed = int(df.duplicated().sum())
-    df = df.drop_duplicates()
+    duplicates_removed = int(df.duplicated().sum()) if not df.empty else 0
+    if not df.empty:
+        df = df.drop_duplicates()
 
-    # Strip spaces from column names
-    df.columns = df.columns.str.strip()
+    # Strip spaces from column names safely
+    df.columns = [str(c).strip() for c in df.columns]
 
     # Clean numeric-like text columns (e.g. ₹399 -> 399, 64% -> 64)
     for col in df.columns:
@@ -181,7 +228,7 @@ def get_statistics(df):
     # Convert all metrics to standard python floats/ints for JSON serialization
     clean_stats = {}
     for col, metrics in desc.items():
-        clean_stats[col] = {
+        clean_stats[str(col)] = {
             k: (float(v) if pd.notnull(v) else None)
             for k, v in metrics.items()
         }
@@ -202,7 +249,7 @@ def get_column_information(df):
 
     for column in df.columns:
 
-        information[column] = {
+        information[str(column)] = {
             "data_type": str(df[column].dtype),
             "unique_values": int(
                 df[column].nunique()
